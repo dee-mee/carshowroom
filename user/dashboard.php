@@ -429,12 +429,6 @@ try {
                     <span>Social Links</span>
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="packages.php">
-                    <i class="fas fa-box"></i>
-                    <span>Packages</span>
-                </a>
-            </li>
             <li class="nav-item mt-4 pt-3" style="border-top: 1px solid rgba(255, 255, 255, 0.1);">
                 <a class="nav-link" href="/carshowroom/logout.php">
                     <i class="fas fa-sign-out-alt"></i>
