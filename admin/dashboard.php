@@ -109,7 +109,7 @@ try {
             top: 0;
             width: 280px;
             height: 100vh;
-            background: linear-gradient(180deg, #6a4c93 0%, #4a2c6a 100%);
+            background: linear-gradient(180deg,rgb(34, 2, 78) 0%,rgb(46, 24, 70) 100%);
             color: white;
             overflow-y: auto;
             z-index: 1000;
@@ -157,7 +157,7 @@ try {
             display: flex;
             align-items: center;
             padding: 12px 20px;
-            color: rgba(255, 255, 255, 0.8);
+            color: rgba(255, 255, 255, 0.99);
             text-decoration: none;
             border-left: 3px solid transparent;
             transition: all 0.3s ease;
@@ -223,12 +223,13 @@ try {
         }
 
         .top-navbar {
-            background: white;
+            background: linear-gradient(180deg,rgb(34, 2, 78) 0%,rgb(46, 24, 70) 100%);;
             padding: 15px 30px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-end;
+            color: white;
         }
 
         .mobile-toggle {
@@ -313,11 +314,6 @@ try {
             padding: 30px;
         }
 
-        .dashboard-title {
-            font-size: 2rem;
-            margin-bottom: 30px;
-            color: #333;
-        }
 
         /* Stats Cards */
         .stats-grid {
@@ -329,12 +325,13 @@ try {
 
         .stat-card {
             background: white;
-            border-radius: 15px;
             padding: 0;
             overflow: hidden;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s ease;
             position: relative;
+            width: 300px;   /* fixed width */
+            height: 200px;
         }
 
         .stat-card:hover {
@@ -348,34 +345,35 @@ try {
         }
 
         .stat-card.orange {
-            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-            color: white;
-        }
+    background: linear-gradient(135deg, #ff4500 0%, #ff8800 100%);
+    color: white;
+}
 
-        .stat-card.blue {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
-        }
+.stat-card.blue {
+    background: linear-gradient(135deg, #0066ff 0%, #00c6ff 100%);
+    color: white;
+}
 
-        .stat-card.green {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            color: white;
-        }
+.stat-card.green {
+    background: linear-gradient(135deg, #00b140 0%, #00e676 100%);
+    color: white;
+}
 
-        .stat-card.purple {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
+.stat-card.purple {
+    background: linear-gradient(135deg, #5a00ff 0%, #9b00ff 100%);
+    color: white;
+}
 
-        .stat-card.lime {
-            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
-            color: white;
-        }
+.stat-card.lime {
+    background: linear-gradient(135deg, #32cd32 0%, #76ff03 100%);
+    color: white;
+}
 
-        .stat-card.red {
-            background: linear-gradient(135deg, #ee5a6f 0%, #f29263 100%);
-            color: white;
-        }
+.stat-card.red {
+    background: linear-gradient(135deg, #e60026 0%, #ff1744 100%);
+    color: white;
+}
+
 
         .stat-icon {
             position: absolute;
@@ -833,7 +831,6 @@ try {
 
         <!-- Dashboard Content -->
         <div class="dashboard-content">
-            <h1 class="dashboard-title">Dashboard</h1>
 
             <!-- Stats Cards -->
             <div class="stats-grid">

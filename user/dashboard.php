@@ -71,14 +71,14 @@ try {
             margin: 0;
         }
 
-        /* Sidebar Styles */
+        /* Sidebar Styles - EXACT match to image */
         .sidebar {
             position: fixed;
             top: 0;
             left: 0;
             height: 100vh;
             width: 280px;
-            background: linear-gradient(180deg, #6f42c1 0%, #4B0082 100%);
+            background:linear-gradient(180deg,rgb(34, 2, 78) 0%,rgb(46, 24, 70) 100%);
             z-index: 1000;
             transition: all 0.3s ease;
         }
@@ -103,7 +103,7 @@ try {
         }
 
         .sidebar .nav-link {
-            color: rgba(255, 255, 255, 0.8);
+            color: rgb(255, 255, 255);
             padding: 0.75rem 1.5rem;
             border-radius: 0;
             transition: all 0.3s;
@@ -139,13 +139,14 @@ try {
             left: 280px;
             right: 0;
             height: 60px;
-            background: white;
+            background: linear-gradient(180deg,rgb(34, 2, 78) 0%,rgb(46, 24, 70) 100%);
             border-bottom: 1px solid #dee2e6;
             z-index: 999;
             display: flex;
             align-items: center;
             padding: 0 2rem;
-            justify-content: space-between;
+            justify-content: flex-end;
+            color: white;
         }
 
         .hamburger-menu {
@@ -153,19 +154,32 @@ try {
             background: none;
             border: none;
             font-size: 1.5rem;
-            color: #6c757d;
+            color:rgb(255, 255, 255);
         }
 
         .user-menu {
             display: flex;
             align-items: center;
         }
+        #userDropdown {
+    color: white !important;
+    background: transparent; /* optional: keep background transparent */
+    border: none;            /* optional: remove border */
+}
+.user-menu .dropdown-toggle {
+    color: white !important;   /* username text */
+}
+
+.user-menu .dropdown-toggle::after {
+    color: white !important;   /* arrow */
+    border-top-color: white !important; /* makes the ▼ triangle white */
+}
 
         .user-avatar {
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: #6f42c1;
+            background:rgb(233, 231, 238);
             color: white;
             display: flex;
             align-items: center;
@@ -182,7 +196,7 @@ try {
             min-height: calc(100vh - 60px);
         }
 
-        /* Stats Cards */
+        /* Stats Cards - EXACT match to bold colors in image */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -192,25 +206,27 @@ try {
 
         .stat-card {
             background: white;
-            border-radius: 12px;
+            border-radius: 0px; /* SHARP CORNERS like in image */
             padding: 1.5rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            box-shadow: none; /* No shadow like in image */
             position: relative;
             overflow: hidden;
+            border: none;
         }
 
+        /* EXACT BOLD COLORS from image */
         .stat-card.orange {
-            background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+            background: #FF4500; /* Pure bold orange-red */
             color: white;
         }
 
         .stat-card.blue {
-            background: linear-gradient(135deg, #4FACFE 0%, #00F2FE 100%);
+            background: #1E90FF; /* Pure bold blue */
             color: white;
         }
 
         .stat-card.purple {
-            background: linear-gradient(135deg, #A8EDEA 0%, #667eea 100%);
+            background: #8A2BE2; /* Pure bold purple */
             color: white;
         }
 
@@ -255,12 +271,13 @@ try {
             color: white;
         }
 
-        /* Table Section */
+        /* Table Section - Sharp corners like image */
         .table-section {
             background: white;
-            border-radius: 12px;
+            border-radius: 0px; /* SHARP CORNERS */
             padding: 1.5rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            box-shadow: none; /* No shadow */
+            border: 1px solid #dee2e6;
         }
 
         .table-section h5 {
@@ -296,7 +313,7 @@ try {
         .badge {
             font-size: 0.75rem;
             padding: 0.375rem 0.75rem;
-            border-radius: 20px;
+            border-radius: 0px; /* Sharp corners for badges too */
         }
 
         .badge.bg-danger {
@@ -309,7 +326,7 @@ try {
             color: white;
             font-size: 0.75rem;
             padding: 0.375rem 0.75rem;
-            border-radius: 4px;
+            border-radius: 0px; /* Sharp corners */
             text-decoration: none;
             display: inline-flex;
             align-items: center;
