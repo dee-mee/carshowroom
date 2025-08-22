@@ -8,19 +8,51 @@ if (!isset($page_title)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $page_title; ?></title>
+    <title><?php echo htmlspecialchars($page_title); ?></title>
     
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
     
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
-    <!-- Custom styles -->
-    <link href="../../assets/css/dashboard.css" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Custom Admin Styles -->
+    <link href="/carshowroom/admin/assets/css/admin-styles.css" rel="stylesheet">
+    
+    
+    <!-- Page-specific styles -->
+    <?php if (isset($custom_css)): ?>
+    <style><?php echo $custom_css; ?></style>
+    <?php endif; ?>
     
     <!-- DataTables CSS -->
     <link href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    
+    <style>
+        /* Highlight active menu item */
+        .nav-link.active {
+            background: rgba(255, 255, 255, 0.2) !important;
+            font-weight: 600;
+        }
+        
+        /* Ensure proper spacing for main content */
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            min-height: 100vh;
+            transition: all 0.3s;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+                padding-top: 70px;
+            }
+        }
+    </style>
     
     <style>
         .sidebar {
