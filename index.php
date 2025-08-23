@@ -5,20 +5,22 @@ require_once 'config/config.php';
 // Get banner data from database
 try {
     require_once 'config/database.php';
-    $bannerStmt = $conn->prepare("SELECT * FROM header_banner WHERE id = 1");
+    // Get the latest banner by ID
+    $bannerStmt = $conn->prepare("SELECT * FROM header_banner ORDER BY id DESC LIMIT 1");
     $bannerStmt->execute();
     $banner = $bannerStmt->fetch(PDO::FETCH_ASSOC);
     
     // If no banner exists, create a default one
     if (!$banner) {
         $defaultBanner = str_replace(BASE_URL, '', DEFAULT_BANNER);
-        $insertStmt = $conn->prepare("INSERT INTO header_banner (id, background_image, title, subtitle) VALUES (1, :bg_image, 'Welcome to Car Showroom', 'Find your dream car today') ON DUPLICATE KEY UPDATE id=id");
+        $insertStmt = $conn->prepare("INSERT INTO header_banner (background_image, title, subtitle) VALUES (:bg_image, 'Welcome to Car Showroom', 'Find your dream car today')");
         $insertStmt->execute([':bg_image' => $defaultBanner]);
+        // Get the newly inserted banner
         $bannerStmt->execute();
         $banner = $bannerStmt->fetch(PDO::FETCH_ASSOC);
     }
     
-    // Ensure background image has a value and correct path
+    // Process background image path
     if (empty($banner['background_image'])) {
         $banner['background_image'] = DEFAULT_BANNER;
     } else {
@@ -97,25 +99,10 @@ include 'includes/header.php';
     font-size: 1.5rem;
 }
 
-/* Bottom image styling */
-.banner-bottom-image {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    max-height: 150px;
-    max-width: 90%;
-    z-index: 2;
-}
-
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .hero-section {
         min-height: 500px;
-    }
-    
-    .banner-bottom-image {
-        max-height: 100px;
     }
 }
 
@@ -238,12 +225,6 @@ include 'includes/header.php';
                     <h1 class="display-4 fw-bold mb-3"><?php echo htmlspecialchars($banner['title'] ?? 'CAR LISTING DIRECTORY', ENT_QUOTES, 'UTF-8'); ?></h1>
                     <p class="lead mb-5"><?php echo htmlspecialchars($banner['subtitle'] ?? 'Over 9500 Classified Listings', ENT_QUOTES, 'UTF-8'); ?></p>
                     
-                    <?php if (!empty($banner['bottom_image'])): ?>
-                    <div class="banner-bottom-image">
-                        <img src="<?php echo htmlspecialchars($banner['bottom_image'], ENT_QUOTES, 'UTF-8'); ?>" alt="Banner Bottom Image" class="img-fluid">
-                    </div>
-                    <?php endif; ?>
-                    
                     <!-- Search Form -->
                     <div class="search-box p-4 rounded mx-auto">
                         <form class="row g-3" method="GET" action="search.php">
@@ -286,10 +267,6 @@ include 'includes/header.php';
             </div>
         </div>
     </div>
-    
-    <?php if (!empty($banner['bottom_image'])): ?>
-        <img src="<?php echo $banner['bottom_image']; ?>" alt="Banner Bottom" class="banner-bottom-image">
-    <?php endif; ?>
 </section>
 
 <!-- Featured Cars Section -->

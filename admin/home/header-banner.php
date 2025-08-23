@@ -18,7 +18,6 @@ try {
         $conn->exec("CREATE TABLE IF NOT EXISTS `header_banner` (
             `id` int(11) NOT NULL AUTO_INCREMENT,
             `background_image` varchar(255) DEFAULT NULL,
-            `bottom_image` varchar(255) DEFAULT NULL,
             `title` varchar(255) DEFAULT NULL,
             `subtitle` varchar(255) DEFAULT NULL,
             `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -32,7 +31,7 @@ try {
         // Add title column if it doesn't exist
         $result = $conn->query("SHOW COLUMNS FROM `header_banner` LIKE 'title'");
         if ($result->rowCount() == 0) {
-            $conn->exec("ALTER TABLE `header_banner` ADD COLUMN `title` varchar(255) DEFAULT NULL AFTER `bottom_image`");
+            $conn->exec("ALTER TABLE `header_banner` ADD COLUMN `title` varchar(255) DEFAULT NULL AFTER `background_image`");
         }
         
         // Add subtitle column if it doesn't exist
@@ -101,9 +100,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $subtitle = $_POST['subtitle'] ?? '';
 
         // Handle background image upload
-        if (isset($_FILES["background_image"]) && $_FILES["background_image"]["error"] === UPLOAD_ERR_OK) {
+        if (!empty($_FILES["background_image"]["name"]) && $_FILES["background_image"]["error"] === UPLOAD_ERR_OK) {
             $background_tmp = $_FILES["background_image"]["tmp_name"];
-            $background_filename = "background_" . time() . "." . strtolower(pathinfo($_FILES["background_image"]["name"], PATHINFO_EXTENSION));
+            $background_filename = "banner_" . time() . "." . strtolower(pathinfo($_FILES["background_image"]["name"], PATHINFO_EXTENSION));
             $background_path = $absolute_dir . $background_filename;
 
             // Validate mime type
@@ -113,69 +112,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $allowed_mimes = ['image/jpeg','image/png','image/gif','image/webp'];
             if (!in_array($mime, $allowed_mimes)) {
-                throw new Exception("Invalid file type for background image.");
+                throw new Exception("Invalid file type for banner image.");
             }
 
             if (!move_uploaded_file($background_tmp, $background_path)) {
-                throw new Exception("Failed to move uploaded background image.");
+                throw new Exception("Failed to upload banner image.");
             }
 
-            $background_image = '/' . ltrim($target_dir, '/') . $background_filename;
+            $background_image = $target_dir . $background_filename;
+            debug_log('Banner image uploaded to: ' . $background_image);
         } else {
-            // keep old one if exists
-            $background_image = !empty($banner_data['background_image']) ? '/' . ltrim($banner_data['background_image'], '/') : "";
+            $background_image = $banner_data['background_image'] ?? '';
+            debug_log('Using existing banner image: ' . $background_image);
         }
 
-        // ✅ Require background image only if none in DB AND none uploaded
+        // Require banner image
         if (empty($background_image)) {
-            if (!isset($_FILES["background_image"]) || $_FILES["background_image"]["error"] !== UPLOAD_ERR_OK) {
-                debug_log("No background image uploaded. _FILES error code: " . ($_FILES["background_image"]["error"] ?? 'not set'));
-            } else {
-                debug_log("Upload attempted but background_image is still empty — check move_uploaded_file or permissions.");
-            }
-            throw new Exception("Background image is required for the first save.");
-        }
-
-        // Handle bottom image upload
-        $bottom_image = '';
-        if (isset($_FILES["bottom_image"]) && $_FILES["bottom_image"]["error"] === UPLOAD_ERR_OK) {
-            $bottom_tmp = $_FILES["bottom_image"]["tmp_name"];
-            $bottom_filename = "bottom_" . time() . "." . strtolower(pathinfo($_FILES["bottom_image"]["name"], PATHINFO_EXTENSION));
-            $bottom_path = $absolute_dir . $bottom_filename;
-
-            // Validate mime type
-            $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            $mime = finfo_file($finfo, $bottom_tmp);
-            finfo_close($finfo);
-
-            $allowed_mimes = ['image/jpeg','image/png','image/gif','image/webp'];
-            if (!in_array($mime, $allowed_mimes)) {
-                throw new Exception("Invalid file type for bottom image.");
-            }
-
-            if (!move_uploaded_file($bottom_tmp, $bottom_path)) {
-                throw new Exception("Failed to move uploaded bottom image.");
-            }
-
-            $bottom_image = '/' . ltrim($target_dir, '/') . $bottom_filename;
-        } else {
-            // keep old one if exists
-            $bottom_image = !empty($banner_data['bottom_image']) ? '/' . ltrim($banner_data['bottom_image'], '/') : "";
+            throw new Exception("Banner image is required.");
         }
 
         // Insert/update DB
         $stmt = $conn->prepare("
-            INSERT INTO header_banner (id, background_image, bottom_image, title, subtitle, updated_at)
-            VALUES (1, ?, ?, ?, ?, NOW())
+            INSERT INTO header_banner (id, background_image, title, subtitle, updated_at)
+            VALUES (1, ?, ?, ?, NOW())
             ON DUPLICATE KEY UPDATE 
             background_image = VALUES(background_image),
-            bottom_image = VALUES(bottom_image),
             title = VALUES(title),
             subtitle = VALUES(subtitle),
             updated_at = NOW()
         ");
         
-        if ($stmt->execute([$background_image, $bottom_image, $title, $subtitle])) {
+        if ($stmt->execute([$background_image, $title, $subtitle])) {
             $success_message = "Banner saved successfully!";
             // Refresh banner data
             $stmt = $conn->query("SELECT * FROM header_banner WHERE id = 1");
@@ -192,9 +159,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // If no banner data exists, create a default entry
 if (empty($banner_data)) {
     try {
-        $stmt = $conn->prepare("INSERT INTO header_banner (id, background_image, bottom_image, updated_at) VALUES (1, '', '', NOW())");
+        $stmt = $conn->prepare("INSERT INTO header_banner (id, background_image, updated_at) VALUES (1, '', NOW())");
         $stmt->execute();
-        $banner_data = ['id' => 1, 'background_image' => '', 'bottom_image' => '', 'updated_at' => date('Y-m-d H:i:s')];
+        $banner_data = ['id' => 1, 'background_image' => '', 'updated_at' => date('Y-m-d H:i:s')];
     } catch(PDOException $e) {
         $error_message = "Database error: " . $e->getMessage();
         debug_log($error_message);
@@ -483,7 +450,7 @@ if (empty($banner_data)) {
 
         .upload-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr;
             gap: 40px;
             margin-bottom: 30px;
         }
@@ -791,35 +758,6 @@ if (empty($banner_data)) {
                                 
                                 <input type="file" id="background_image" name="background_image" class="file-input" 
                                        accept="image/*" onchange="previewImage(this, 'background')">
-                            </div>
-                        </div>
-
-                        <!-- Bottom Image Upload -->
-                        <div class="upload-item">
-                            <div class="upload-label">
-                                Bottom Image
-                            </div>
-                            <div class="upload-area" onclick="document.getElementById('bottom_image').click()" 
-                                 ondrop="handleDrop(event, 'bottom')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
-                                
-                                <?php if (!empty($banner_data['bottom_image'])): ?>
-                                    <div class="upload-preview" style="background-image: url('/carshowroom/admin/<?php echo htmlspecialchars($banner_data['bottom_image']); ?>')"></div>
-                                    <div class="upload-preview-overlay">
-                                        <button type="button" class="change-btn" onclick="event.stopPropagation(); document.getElementById('bottom_image').click()">
-                                            <i class="fas fa-edit"></i> Change Image
-                                        </button>
-                                    </div>
-                                <?php else: ?>
-                                    <i class="fas fa-image upload-icon"></i>
-                                    <div class="upload-text">Click to upload bottom image</div>
-                                    <div class="upload-subtext">or drag and drop (optional)</div>
-                                    <button type="button" class="upload-btn" onclick="event.stopPropagation(); document.getElementById('bottom_image').click()">
-                                        <i class="fas fa-upload"></i> Upload Image
-                                    </button>
-                                <?php endif; ?>
-                                
-                                <input type="file" id="bottom_image" name="bottom_image" class="file-input" 
-                                       accept="image/*" onchange="previewImage(this, 'bottom')">
                             </div>
                         </div>
                     </div>
