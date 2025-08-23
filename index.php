@@ -47,6 +47,11 @@ try {
     $latestStmt->execute();
     $latest_cars = $latestStmt->fetchAll(PDO::FETCH_ASSOC);
     
+    // Get testimonials from database
+    $testimonialsStmt = $conn->prepare("SELECT * FROM testimonials WHERE status = 'active' ORDER BY created_at DESC LIMIT 6");
+    $testimonialsStmt->execute();
+    $testimonials = $testimonialsStmt->fetchAll(PDO::FETCH_ASSOC);
+    
 } catch(PDOException $e) {
     error_log('Database Error: ' . $e->getMessage());
     // Only override banner if it wasn't already set successfully
@@ -61,6 +66,7 @@ try {
     // Set empty arrays for cars if database fails
     $featured_cars = [];
     $latest_cars = [];
+    $testimonials = [];
 }
 
 // Ensure cars arrays exist even if there was an error
@@ -69,6 +75,9 @@ if (!isset($featured_cars)) {
 }
 if (!isset($latest_cars)) {
     $latest_cars = [];
+}
+if (!isset($testimonials)) {
+    $testimonials = [];
 }
 
 // Get latest published blog posts
@@ -590,6 +599,71 @@ include 'includes/header.php';
             </div>
         </div>
         <?php endif; ?>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="testimonials py-5 bg-light">
+    <div class="container">
+        <div class="section-title text-center mb-5">
+            <h2>What Our Customers Say</h2>
+            <p class="text-muted">Read testimonials from our satisfied customers</p>
+        </div>
+        
+        <div class="row g-4">
+            <?php if (empty($testimonials)): ?>
+                <div class="col-12 text-center py-5">
+                    <i class="bi bi-chat-quote fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No testimonials available at the moment. Please check back later.</p>
+                </div>
+            <?php else: ?>
+                <?php foreach ($testimonials as $testimonial): ?>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card testimonial-card h-100 border-0 shadow-sm">
+                            <div class="card-body text-center p-4">
+                                <div class="testimonial-avatar mb-3">
+                                    <?php if ($testimonial['image_path']): ?>
+                                        <img src="/carshowroom<?php echo htmlspecialchars($testimonial['image_path']); ?>" 
+                                             alt="<?php echo htmlspecialchars($testimonial['client_name']); ?>" 
+                                             class="rounded-circle" 
+                                             style="width: 80px; height: 80px; object-fit: cover;">
+                                    <?php else: ?>
+                                        <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center" 
+                                             style="width: 80px; height: 80px;">
+                                            <i class="bi bi-person-fill text-white" style="font-size: 2rem;"></i>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                                
+                                <div class="rating mb-3">
+                                    <?php 
+                                    $full_stars = (int)$testimonial['rating'];
+                                    $empty_stars = 5 - $full_stars;
+                                    for ($i = 0; $i < $full_stars; $i++) {
+                                        echo '<i class="bi bi-star-fill text-warning"></i>';
+                                    }
+                                    for ($i = 0; $i < $empty_stars; $i++) {
+                                        echo '<i class="bi bi-star text-warning"></i>';
+                                    }
+                                    ?>
+                                </div>
+                                
+                                <blockquote class="mb-3">
+                                    <p class="text-muted fst-italic">"<?php echo htmlspecialchars($testimonial['testimonial']); ?>"</p>
+                                </blockquote>
+                                
+                                <div class="testimonial-author">
+                                    <h6 class="fw-bold mb-0"><?php echo htmlspecialchars($testimonial['client_name']); ?></h6>
+                                    <?php if ($testimonial['company']): ?>
+                                        <small class="text-muted"><?php echo htmlspecialchars($testimonial['company']); ?></small>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
     </div>
 </section>
 

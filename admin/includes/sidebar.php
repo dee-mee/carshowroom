@@ -51,10 +51,11 @@
                 </a>
                 <div class="submenu">
                     <a href="#" class="submenu-item">All Cars</a>
-                    <a href="#" class="submenu-item">Featured Cars</a>
-                    <a href="#" class="submenu-item">Pending Cars</a>
-                    <a href="#" class="submenu-item">Published Cars</a>
-                    <a href="#" class="submenu-item">Rejected Cars</a>
+                    <a href="featured-section.php" class="submenu-item">Featured Cars</a>
+                    <a href="latest-cars-section.php" class="submenu-item">Latest Cars</a>
+                    <a href="testimonials.php" class="submenu-item">Testimonials</a>
+                    <a href="header-banner.php" class="submenu-item">Header Banner</a>
+                    <a href="blog-section.php" class="submenu-item">Blog Section</a>
                 </div>
             </div>
 
