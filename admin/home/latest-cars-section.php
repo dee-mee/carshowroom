@@ -7,6 +7,9 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
     exit();
 }
 
+// Set active page for sidebar
+$active_page = 'latest-cars';
+
 // Include database configuration
 require_once '../../config/database.php';
 
@@ -46,8 +49,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($action === 'add' || $action === 'edit') {
             // Get form data
             $title = $_POST['title'] ?? '';
-            $image_url = $_POST['image_url'] ?? '';
             $price = $_POST['price'] ?? 0;
+            
+            // Handle image upload
+            $image_path = '';
+            if (isset($_FILES['car_image']) && $_FILES['car_image']['error'] === UPLOAD_ERR_OK) {
+                $upload_dir = '../../uploads/cars/';
+                if (!file_exists($upload_dir)) {
+                    mkdir($upload_dir, 0777, true);
+                }
+                
+                $file_extension = strtolower(pathinfo($_FILES['car_image']['name'], PATHINFO_EXTENSION));
+                $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                
+                if (in_array($file_extension, $allowed_extensions)) {
+                    $filename = 'car_' . time() . '_' . uniqid() . '.' . $file_extension;
+                    $target_path = $upload_dir . $filename;
+                    
+                    if (move_uploaded_file($_FILES['car_image']['tmp_name'], $target_path)) {
+                        $image_path = 'uploads/cars/' . $filename;
+                    } else {
+                        throw new Exception('Failed to upload image');
+                    }
+                } else {
+                    throw new Exception('Invalid image format. Only JPG, PNG, GIF, and WebP are allowed.');
+                }
+            } elseif ($action === 'edit' && isset($_POST['existing_image'])) {
+                $image_path = $_POST['existing_image'];
+            }
             $views = $_POST['views'] ?? '';
             $time_posted = $_POST['time_posted'] ?? '';
             $status = $_POST['status'] ?? '';
@@ -57,8 +86,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $edit_id = $_POST['edit_id'] ?? null;
             
             // Basic validation
-            if (empty($title) || empty($image_url) || empty($price)) {
-                throw new Exception("Title, image URL and price are required");
+            if (empty($title) || empty($image_path) || empty($price)) {
+                throw new Exception("Title, image and price are required");
             }
             
             if ($action === 'edit' && $edit_id) {
@@ -71,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ");
                 
                 $stmt->execute([
-                    $title, $image_url, $price, $views, $time_posted, 
+                    $title, $image_path, $price, $views, $time_posted, 
                     $status, $status_class, $is_active, $sort_order, $edit_id
                 ]);
                 
@@ -84,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ");
                 
                 $stmt->execute([
-                    $title, $image_url, $price, $views, $time_posted, 
+                    $title, $image_path, $price, $views, $time_posted, 
                     $status, $status_class, $is_active, $sort_order
                 ]);
                 
@@ -291,7 +320,7 @@ $stats = $stmt->fetch(PDO::FETCH_ASSOC);
                     <h5 id="formTitle"><i class="fas fa-plus me-2"></i>Add New Latest Car</h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST" id="latestCarForm">
+                    <form method="POST" id="latestCarForm" enctype="multipart/form-data">
                         <input type="hidden" name="action" id="formAction" value="add">
                         <input type="hidden" name="edit_id" id="editId" value="">
                         
@@ -301,8 +330,9 @@ $stats = $stmt->fetch(PDO::FETCH_ASSOC);
                                 <input type="text" class="form-control" id="title" name="title" required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="image_url" class="form-label">Image URL <span class="text-danger">*</span></label>
-                                <input type="url" class="form-control" id="image_url" name="image_url" required>
+                                <label for="car_image" class="form-label">Car Image <span class="text-danger">*</span></label>
+                                <input type="file" class="form-control" id="car_image" name="car_image" accept="image/*" required>
+                                <small class="form-text text-muted">Supported formats: JPG, PNG, GIF, WebP</small>
                             </div>
                         </div>
                         
@@ -401,7 +431,8 @@ $stats = $stmt->fetch(PDO::FETCH_ASSOC);
                                         <td>
                                             <img src="<?php echo htmlspecialchars($car['image_url']); ?>" 
                                                  alt="Car" class="car-image" 
-                                                 onerror="this.src='https://via.placeholder.com/60x40/6c5ce7/ffffff?text=Car'">
+                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div style="display:none; width:60px; height:40px; background:#6c5ce7; color:white; display:flex; align-items:center; justify-content:center; font-size:10px; border-radius:4px;">Car</div>
                                         </td>
                                         <td><?php echo htmlspecialchars($car['title']); ?></td>
                                         <td><?php echo htmlspecialchars($car['price']); ?></td>
@@ -449,8 +480,21 @@ $stats = $stmt->fetch(PDO::FETCH_ASSOC);
             document.getElementById('formAction').value = 'edit';
             document.getElementById('editId').value = car.id;
             document.getElementById('title').value = car.title;
-            document.getElementById('image_url').value = car.image_url;
             document.getElementById('price').value = car.price;
+            
+            // Add hidden field for existing image
+            let existingImageField = document.getElementById('existing_image');
+            if (!existingImageField) {
+                existingImageField = document.createElement('input');
+                existingImageField.type = 'hidden';
+                existingImageField.id = 'existing_image';
+                existingImageField.name = 'existing_image';
+                document.getElementById('latestCarForm').appendChild(existingImageField);
+            }
+            existingImageField.value = car.image_url;
+            
+            // Make image upload optional for editing
+            document.getElementById('car_image').required = false;
             document.getElementById('views').value = car.views;
             document.getElementById('time_posted').value = car.time_posted;
             document.getElementById('status').value = car.status;
@@ -475,6 +519,5 @@ $stats = $stmt->fetch(PDO::FETCH_ASSOC);
         }
 
     </script>
-    <script src="../assets/js/admin-layout.js"></script>
 </body>
 </html>

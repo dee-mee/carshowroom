@@ -35,22 +35,30 @@ function toggleSubmenu(link) {
     }
 }
 
-// Initialize when DOM is loaded
+// Initialize when DOM is loaded - with timeout to prevent blocking
 document.addEventListener("DOMContentLoaded", function() {
-    // Auto-expand active submenu
-    const activeLink = document.querySelector('.nav-link.active');
-    if (activeLink) {
-        const submenu = activeLink.closest('.submenu');
-        if (submenu) {
-            const parentLink = submenu.previousElementSibling;
-            parentLink.classList.add('active');
-            submenu.style.maxHeight = submenu.scrollHeight + "px";
-            const arrow = parentLink.querySelector('.dropdown-arrow');
-            if (arrow) {
-                arrow.classList.add('expanded');
+    // Use setTimeout to prevent blocking the main thread
+    setTimeout(function() {
+        try {
+            const activeLink = document.querySelector('.nav-link.active');
+            if (activeLink) {
+                const submenu = activeLink.closest('.submenu');
+                if (submenu) {
+                    const parentLink = submenu.previousElementSibling;
+                    if (parentLink) {
+                        parentLink.classList.add('active');
+                        submenu.style.maxHeight = submenu.scrollHeight + "px";
+                        const arrow = parentLink.querySelector('.dropdown-arrow');
+                        if (arrow) {
+                            arrow.classList.add('expanded');
+                        }
+                    }
+                }
             }
+        } catch (e) {
+            console.warn('Error in submenu initialization:', e);
         }
-    }
+    }, 100);
 
     // Close sidebar when clicking outside on mobile
     document.addEventListener('click', function(event) {
@@ -82,15 +90,25 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
-    // Auto-hide alerts after 5 seconds
+    // Auto-hide alerts after 5 seconds - with error handling
     setTimeout(function() {
-        const alerts = document.querySelectorAll('.alert');
-        alerts.forEach(function(alert) {
-            alert.style.transition = 'opacity 0.5s';
-            alert.style.opacity = '0';
-            setTimeout(function() {
-                alert.remove();
-            }, 500);
-        });
+        try {
+            const alerts = document.querySelectorAll('.alert');
+            if (alerts.length > 0) {
+                alerts.forEach(function(alert) {
+                    if (alert && alert.style) {
+                        alert.style.transition = 'opacity 0.5s';
+                        alert.style.opacity = '0';
+                        setTimeout(function() {
+                            if (alert && alert.parentNode) {
+                                alert.remove();
+                            }
+                        }, 500);
+                    }
+                });
+            }
+        } catch (e) {
+            console.warn('Error in alert auto-hide:', e);
+        }
     }, 5000);
 });

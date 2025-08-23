@@ -437,10 +437,10 @@ include 'includes/header.php';
                         <div class="card car-card h-100">
                             <div class="position-relative">
                                 <span class="badge bg-danger position-absolute m-3" style="z-index: 2;">Featured</span>
-                                <img src="<?php echo htmlspecialchars($car['image_url']); ?>" 
-                                     class="card-img-top" 
-                                     alt="<?php echo htmlspecialchars($car['title']); ?>"
-                                     onerror="this.src='https://via.placeholder.com/400x250/6c5ce7/ffffff?text=<?php echo urlencode($car['title']); ?>'">
+                                <img src="/carshowroom/<?php echo htmlspecialchars($car['image_url']); ?>" 
+                                 alt="<?php echo htmlspecialchars($car['title']); ?>" 
+                                 class="card-img-top" 
+                                 onerror="this.src='https://via.placeholder.com/400x250/6c5ce7/ffffff?text=Featured+Car'">
                             </div>
                             <div class="card-body">
                                 <h5 class="card-title fw-bold"><?php echo htmlspecialchars($car['title']); ?></h5>
@@ -493,10 +493,10 @@ include 'includes/header.php';
                 <?php foreach ($latest_cars as $car): ?>
                     <div class="col-lg-4 col-md-6">
                         <div class="card car-card h-100">
-                            <img src="<?php echo htmlspecialchars($car['image_url']); ?>" 
+                            <img src="/carshowroom/<?php echo htmlspecialchars($car['image_url']); ?>" 
                                  class="card-img-top" 
                                  alt="<?php echo htmlspecialchars($car['title']); ?>"
-                                 onerror="this.src='https://via.placeholder.com/400x250/6c5ce7/ffffff?text=<?php echo urlencode($car['title']); ?>'">
+                                 onerror="this.src='https://via.placeholder.com/400x250/6c5ce7/ffffff?text=Latest+Car'">
                             <div class="card-body">
                                 <h5 class="card-title fw-bold"><?php echo htmlspecialchars($car['title']); ?></h5>
                                 <div class="d-flex justify-content-between text-muted mb-3">
@@ -535,7 +535,7 @@ include 'includes/header.php';
                     <img src="<?php echo htmlspecialchars($post['image_path']); ?>" 
                          class="blog-image card-img-top" 
                          alt="<?php echo htmlspecialchars($post['title']); ?>"
-                         onerror="this.src='https://via.placeholder.com/400x250/6c5ce7/ffffff?text=<?php echo urlencode(substr($post['title'], 0, 20)); ?>'">
+                         onerror="this.src='https://via.placeholder.com/400x250/6c5ce7/ffffff?text=Blog+Post'">
                     <div class="card-body d-flex flex-column">
                         <div class="blog-meta d-flex justify-content-between text-muted mb-2">
                             <small><i class="bi bi-person"></i> By <?php echo htmlspecialchars($post['author_name']); ?></small>

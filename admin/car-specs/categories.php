@@ -3,16 +3,20 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
+<?php
 session_start();
 
 // Check if admin is logged in and has admin privileges
-if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'admin') {
-    header("Location: /carshowroom/admin/login.php");
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
+    header("Location: ../login.php");
     exit();
 }
 
+// Set active page for sidebar
+$active_page = 'car-specs';
+
 // Include database configuration
-require_once __DIR__ . '/../../config/database.php';
+require_once '../../config/database.php';
 
 try {
     // Use the connection from database.php

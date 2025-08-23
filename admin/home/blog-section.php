@@ -1,13 +1,17 @@
 <?php
 session_start();
+
 // Check if admin is logged in and has admin privileges
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
-    header("Location: login.php");
+    header("Location: ../login.php");
     exit();
 }
 
+// Set active page for sidebar
+$active_page = 'blog-section';
+
 // Include database configuration
-require_once '/opt/lampp/htdocs/carshowroom/config/database.php';
+require_once '../../config/database.php';
 
 // Create blogs table if it doesn't exist
 try {
@@ -889,16 +893,22 @@ function createSlug($text) {
             }
         });
 
-        // Close dropdown when clicking outside
+        // Close dropdown when clicking outside - with error handling
         window.onclick = function(event) {
-            if (!event.target.matches('.dropdown-toggle')) {
-                const dropdowns = document.getElementsByClassName('dropdown-menu');
-                for (let i = 0; i < dropdowns.length; i++) {
-                    const openDropdown = dropdowns[i];
-                    if (openDropdown.classList.contains('show')) {
-                        openDropdown.classList.remove('show');
+            try {
+                if (event && event.target && !event.target.matches('.dropdown-toggle')) {
+                    const dropdowns = document.getElementsByClassName('dropdown-menu');
+                    if (dropdowns) {
+                        for (let i = 0; i < dropdowns.length; i++) {
+                            const openDropdown = dropdowns[i];
+                            if (openDropdown && openDropdown.classList && openDropdown.classList.contains('show')) {
+                                openDropdown.classList.remove('show');
+                            }
+                        }
                     }
                 }
+            } catch (e) {
+                console.warn('Error in dropdown close handler:', e);
             }
         }
 
@@ -909,14 +919,26 @@ function createSlug($text) {
             }
         });
 
-        // Auto-hide alerts after 5 seconds
+        // Auto-hide alerts after 5 seconds - with error handling
         setTimeout(function() {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
-                alert.style.opacity = '0';
-                alert.style.transform = 'translateY(-20px)';
-                setTimeout(() => alert.remove(), 300);
-            });
+            try {
+                const alerts = document.querySelectorAll('.alert');
+                if (alerts.length > 0) {
+                    alerts.forEach(alert => {
+                        if (alert && alert.style) {
+                            alert.style.opacity = '0';
+                            alert.style.transform = 'translateY(-20px)';
+                            setTimeout(() => {
+                                if (alert && alert.parentNode) {
+                                    alert.remove();
+                                }
+                            }, 300);
+                        }
+                    });
+                }
+            } catch (e) {
+                console.warn('Error in alert auto-hide:', e);
+            }
         }, 5000);
 
         // Auto-generate slug from title (if needed for future features)

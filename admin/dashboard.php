@@ -7,18 +7,14 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
     exit();
 }
 
-// Database connection
-$host = 'localhost';
-$dbname = 'carlisto_showroom';
-$username = 'root';
-$password = '';
+// Set active page for sidebar
+$active_page = 'dashboard';
 
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch(PDOException $e) {
-    die("Connection failed: " . $e->getMessage());
-}
+// Include database configuration
+require_once '../config/database.php';
+
+// Use the existing $conn from database.php instead of creating a new connection
+$pdo = $conn;
 
 $admin_name = $_SESSION['user_name'] ?? 'Admin';
 
