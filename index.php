@@ -38,7 +38,7 @@ try {
     $banner['background_image'] = $web_path;
     
     // Get featured cars from database
-    $featuredStmt = $conn->prepare("SELECT * FROM featured_cars WHERE is_active = 'yes' ORDER BY sort_order ASC, created_at DESC LIMIT 6");
+    $featuredStmt = $conn->prepare("SELECT * FROM featured_cars WHERE status = 'active' ORDER BY sort_order ASC, created_at DESC LIMIT 6");
     $featuredStmt->execute();
     $featured_cars = $featuredStmt->fetchAll(PDO::FETCH_ASSOC);
     
@@ -55,12 +55,19 @@ try {
             'background_image' => DEFAULT_BANNER,
             'bottom_image' => '',
             'title' => 'Car Showroom',
-            'subtitle' => 'Find your dream car today',
-            'debug' => ['error' => $e->getMessage()]
+            'subtitle' => 'Find your dream car today'
         ];
     }
     // Set empty arrays for cars if database fails
     $featured_cars = [];
+    $latest_cars = [];
+}
+
+// Ensure cars arrays exist even if there was an error
+if (!isset($featured_cars)) {
+    $featured_cars = [];
+}
+if (!isset($latest_cars)) {
     $latest_cars = [];
 }
 
