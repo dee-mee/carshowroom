@@ -1,34 +1,144 @@
 <?php
-require_once 'config/database.php';
+// Load configuration
+require_once 'config/config.php';
+
+// Get banner data from database
+try {
+    require_once 'config/database.php';
+    $bannerStmt = $conn->prepare("SELECT * FROM header_banner WHERE id = 1");
+    $bannerStmt->execute();
+    $banner = $bannerStmt->fetch(PDO::FETCH_ASSOC);
+    
+    // If no banner exists, create a default one
+    if (!$banner) {
+        $defaultBanner = str_replace(BASE_URL, '', DEFAULT_BANNER);
+        $insertStmt = $conn->prepare("INSERT INTO header_banner (id, background_image, title, subtitle) VALUES (1, :bg_image, 'Welcome to Car Showroom', 'Find your dream car today') ON DUPLICATE KEY UPDATE id=id");
+        $insertStmt->execute([':bg_image' => $defaultBanner]);
+        $bannerStmt->execute();
+        $banner = $bannerStmt->fetch(PDO::FETCH_ASSOC);
+    }
+    
+    // Ensure background image has a value and correct path
+    if (empty($banner['background_image'])) {
+        $banner['background_image'] = DEFAULT_BANNER;
+    } else {
+        // If the path doesn't start with http or /, add BASE_URL
+        if (strpos($banner['background_image'], 'http') !== 0 && $banner['background_image'][0] !== '/') {
+            $banner['background_image'] = BASE_URL . '/' . ltrim($banner['background_image'], '/');
+        } elseif ($banner['background_image'][0] === '/' && strpos($banner['background_image'], BASE_URL) !== 0) {
+            // If it's an absolute path but missing BASE_URL
+            $banner['background_image'] = BASE_URL . $banner['background_image'];
+        }
+    }
+    
+    // Debug information
+    $banner['debug'] = [
+        'file_exists' => file_exists($_SERVER['DOCUMENT_ROOT'] . parse_url($banner['background_image'], PHP_URL_PATH)),
+        'full_path' => $_SERVER['DOCUMENT_ROOT'] . parse_url($banner['background_image'], PHP_URL_PATH),
+        'banner_path' => $banner['background_image'],
+        'document_root' => $_SERVER['DOCUMENT_ROOT']
+    ];
+    
+} catch(PDOException $e) {
+    error_log('Banner Error: ' . $e->getMessage());
+    $banner = [
+        'background_image' => DEFAULT_BANNER,
+        'bottom_image' => '',
+        'title' => 'Car Showroom',
+        'subtitle' => 'Find your dream car today',
+        'debug' => ['error' => $e->getMessage()]
+    ];
+}
+
 include 'includes/header.php';
 ?>
 
 <style>
 .hero-section {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    background: url('<?php 
+        echo htmlspecialchars($banner['background_image'], ENT_QUOTES, 'UTF-8');
+    ?>') no-repeat center center;
+    background-size: cover;
     position: relative;
     overflow: hidden;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    color: #fff;
+}
+
+.hero-section:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 1;
 }
 
 .hero-content {
     position: relative;
     z-index: 2;
+    width: 100%;
 }
 
-.car-showcase {
+.hero-content h1 {
+    color: #fff;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+    font-size: 3.5rem;
+    font-weight: 800;
+}
+
+.hero-content p {
+    color: #f8f9fa;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+    font-size: 1.5rem;
+}
+
+/* Bottom image styling */
+.banner-bottom-image {
     position: absolute;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 1;
-    opacity: 0.1;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    max-height: 150px;
+    max-width: 90%;
+    z-index: 2;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hero-section {
+        min-height: 500px;
+    }
+    
+    .banner-bottom-image {
+        max-height: 100px;
+    }
 }
 
 .search-box {
-    max-width: 800px;
+    max-width: 1000px;
     margin: 0 auto;
     border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.search-box .form-select {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 12px 15px;
+    font-weight: 500;
+}
+
+.search-box .btn-warning {
+    padding: 12px 15px;
+    font-size: 1.1rem;
 }
 
 .car-card {
@@ -119,58 +229,67 @@ include 'includes/header.php';
 }
 </style>
 
-<!-- Hero Section -->
-<section class="hero-section position-relative py-5">
+<!-- Hero/Banner Section -->
+<section class="hero-section position-relative">
     <div class="container">
-        <div class="row align-items-center min-vh-50">
-            <div class="col-lg-6 hero-content">
-                <h1 class="display-4 fw-bold mb-3 text-dark">CAR LISTING DIRECTORY</h1>
-                <p class="lead mb-5 text-muted">Over 9500 Classified Listings</p>
-                
-                <!-- Search Form -->
-                <div class="search-box bg-white p-4 rounded shadow">
-                    <form class="row g-3" method="GET" action="search.php">
-                        <div class="col-md-3">
-                            <select name="brand" class="form-select">
-                                <option value="">Brand</option>
-                                <option value="toyota">Toyota</option>
-                                <option value="honda">Honda</option>
-                                <option value="nissan">Nissan</option>
-                                <option value="bmw">BMW</option>
-                                <option value="mercedes">Mercedes-Benz</option>
-                                <option value="audi">Audi</option>
-                                <option value="volkswagen">Volkswagen</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <select name="condition" class="form-select">
-                                <option value="">Condition</option>
-                                <option value="new">New</option>
-                                <option value="used">Used</option>
-                                <option value="certified">Certified</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <select name="price_range" class="form-select">
-                                <option value="">Price Range (USD)</option>
-                                <option value="0-5000">$0 - $5,000</option>
-                                <option value="5000-15000">$5,000 - $15,000</option>
-                                <option value="15000-30000">$15,000 - $30,000</option>
-                                <option value="30000-50000">$30,000 - $50,000</option>
-                                <option value="50000+">$50,000+</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <button type="submit" class="btn btn-warning w-100">Search</button>
-                        </div>
-                    </form>
+        <div class="row justify-content-center text-center">
+            <div class="col-lg-8">
+                <div class="hero-content py-5">
+                    <h1 class="display-4 fw-bold mb-3"><?php echo htmlspecialchars($banner['title'] ?? 'CAR LISTING DIRECTORY', ENT_QUOTES, 'UTF-8'); ?></h1>
+                    <p class="lead mb-5"><?php echo htmlspecialchars($banner['subtitle'] ?? 'Over 9500 Classified Listings', ENT_QUOTES, 'UTF-8'); ?></p>
+                    
+                    <?php if (!empty($banner['bottom_image'])): ?>
+                    <div class="banner-bottom-image">
+                        <img src="<?php echo htmlspecialchars($banner['bottom_image'], ENT_QUOTES, 'UTF-8'); ?>" alt="Banner Bottom Image" class="img-fluid">
+                    </div>
+                    <?php endif; ?>
+                    
+                    <!-- Search Form -->
+                    <div class="search-box p-4 rounded mx-auto">
+                        <form class="row g-3" method="GET" action="search.php">
+                            <div class="col-lg-3 col-md-6 col-sm-6">
+                                <select name="brand" class="form-select">
+                                    <option value="">Brand</option>
+                                    <option value="toyota">Toyota</option>
+                                    <option value="honda">Honda</option>
+                                    <option value="nissan">Nissan</option>
+                                    <option value="bmw">BMW</option>
+                                    <option value="mercedes">Mercedes-Benz</option>
+                                    <option value="audi">Audi</option>
+                                    <option value="volkswagen">Volkswagen</option>
+                                </select>
+                            </div>
+                            <div class="col-lg-3 col-md-6 col-sm-6">
+                                <select name="condition" class="form-select">
+                                    <option value="">Condition</option>
+                                    <option value="new">New</option>
+                                    <option value="used">Used</option>
+                                    <option value="certified">Certified</option>
+                                </select>
+                            </div>
+                            <div class="col-lg-3 col-md-6 col-sm-6">
+                                <select name="price_range" class="form-select">
+                                    <option value="">Price Range (USD)</option>
+                                    <option value="0-5000">$0 - $5,000</option>
+                                    <option value="5000-15000">$5,000 - $15,000</option>
+                                    <option value="15000-30000">$15,000 - $30,000</option>
+                                    <option value="30000-50000">$30,000 - $50,000</option>
+                                    <option value="50000+">$50,000+</option>
+                                </select>
+                            </div>
+                            <div class="col-lg-3 col-md-6 col-sm-6">
+                                <button type="submit" class="btn btn-warning w-100 fw-bold">Search</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-            </div>
-            <div class="col-lg-6 text-center">
-                <img src="https://via.placeholder.com/600x350/4a90e2/ffffff?text=Premium+Cars" class="img-fluid" alt="Car Showcase" style="border-radius: 15px;">
             </div>
         </div>
     </div>
+    
+    <?php if (!empty($banner['bottom_image'])): ?>
+        <img src="<?php echo $banner['bottom_image']; ?>" alt="Banner Bottom" class="banner-bottom-image">
+    <?php endif; ?>
 </section>
 
 <!-- Featured Cars Section -->

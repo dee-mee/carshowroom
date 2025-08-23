@@ -90,7 +90,7 @@
                     <i class="fas fa-angle-double-right dropdown-arrow"></i>
                 </a>
                 <div class="submenu">
-                    <a href="#" class="submenu-item">Header Banner</a>
+                    <a href="/carshowroom/admin/home/header-banner.php" class="submenu-item">Header Banner</a>
                     <a href="#" class="submenu-item">Featured Cars Section</a>
                     <a href="#" class="submenu-item">Latest Cars Section</a>
                     <a href="#" class="submenu-item">Testimonial Management</a>

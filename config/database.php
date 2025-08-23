@@ -3,16 +3,20 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'carlisto_showroom');
-define('DB_SOCKET', '/opt/lampp/var/mysql/mysql.sock');
+// Include configuration
+require_once __DIR__ . '/config.php';
+
+// Only define constants if they're not already defined
+if (!defined('DB_HOST')) define('DB_HOST', 'localhost');
+if (!defined('DB_USER')) define('DB_USER', 'root');
+if (!defined('DB_PASS')) define('DB_PASS', '');
+if (!defined('DB_NAME')) define('DB_NAME', 'carlisto_showroom');
+if (!defined('DB_SOCKET')) define('DB_SOCKET', '/opt/lampp/var/mysql/mysql.sock');
 
 // Create PDO connection
 try {
-    // First try connecting with socket
-    $dsn = "mysql:unix_socket=" . DB_SOCKET . ";dbname=" . DB_NAME . ";charset=utf8mb4";
+    // Try connecting with TCP/IP
+    $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";
     
     // Try to connect to the database
     $conn = new PDO($dsn, DB_USER, DB_PASS, [
