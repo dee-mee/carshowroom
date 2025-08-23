@@ -52,6 +52,80 @@ try {
     ];
 }
 
+// Get latest published blog posts
+$blog_posts = [];
+try {
+    $blogStmt = $conn->prepare("
+        SELECT id, title, slug, excerpt, content, image_path, created_at, author_id
+        FROM blogs 
+        WHERE status = 'published' 
+        ORDER BY created_at DESC 
+        LIMIT 3
+    ");
+    $blogStmt->execute();
+    $blog_posts = $blogStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Process blog post data
+    foreach ($blog_posts as &$post) {
+        // Create excerpt if none exists
+        if (empty($post['excerpt'])) {
+            $post['excerpt'] = substr(strip_tags($post['content']), 0, 120) . '...';
+        }
+        
+        // Process image path
+        if (!empty($post['image_path'])) {
+            // If the path doesn't start with http or /, add BASE_URL
+            if (strpos($post['image_path'], 'http') !== 0 && $post['image_path'][0] !== '/') {
+                $post['image_path'] = BASE_URL . '/' . ltrim($post['image_path'], '/');
+            } elseif ($post['image_path'][0] === '/' && strpos($post['image_path'], BASE_URL) !== 0) {
+                $post['image_path'] = BASE_URL . $post['image_path'];
+            }
+        } else {
+            // Use placeholder if no image
+            $post['image_path'] = 'https://via.placeholder.com/400x250/6c5ce7/ffffff?text=' . urlencode(substr($post['title'], 0, 20));
+        }
+        
+        // Format date
+        $post['formatted_date'] = date('M d, Y', strtotime($post['created_at']));
+        
+        // Get author name (you might want to join with users table if you have one)
+        $post['author_name'] = 'Admin'; // Default author name
+        
+        // Create blog post URL
+        $post['url'] = 'blog-single.php?slug=' . urlencode($post['slug']);
+    }
+    
+} catch(PDOException $e) {
+    error_log('Blog Error: ' . $e->getMessage());
+    // Fallback to sample data if database query fails
+    $blog_posts = [
+        [
+            'title' => 'Top five secrets for car maintenance',
+            'author_name' => 'Admin',
+            'formatted_date' => 'Aug 20, 2023',
+            'excerpt' => 'Learn the essential tips and tricks to keep your vehicle running smoothly for years to come.',
+            'image_path' => 'https://via.placeholder.com/400x250/b19cd9/ffffff?text=Car+Maintenance',
+            'url' => 'blog-single.php'
+        ],
+        [
+            'title' => 'How to choose the right car insurance',
+            'author_name' => 'Admin',
+            'formatted_date' => 'Aug 18, 2023',
+            'excerpt' => 'Navigate through different insurance options and find the perfect coverage for your needs.',
+            'image_path' => 'https://via.placeholder.com/400x250/5cb85c/ffffff?text=Car+Insurance',
+            'url' => 'blog-single.php'
+        ],
+        [
+            'title' => 'Electric vs Gasoline: Complete guide',
+            'author_name' => 'Admin',
+            'formatted_date' => 'Aug 15, 2023',
+            'excerpt' => 'Compare the pros and cons of electric and gasoline vehicles in our comprehensive guide.',
+            'image_path' => 'https://via.placeholder.com/400x250/f0ad4e/ffffff?text=Electric+Cars',
+            'url' => 'blog-single.php'
+        ]
+    ];
+}
+
 include 'includes/header.php';
 ?>
 
@@ -213,6 +287,50 @@ include 'includes/header.php';
 
 .footer-section a:hover {
     color: #ff6b35;
+}
+
+/* Blog card hover effects */
+.blog-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.blog-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+}
+
+.blog-image {
+    height: 250px;
+    object-fit: cover;
+    width: 100%;
+}
+
+.blog-meta {
+    font-size: 0.85rem;
+}
+
+.blog-title {
+    color: #2c3e50;
+    line-height: 1.4;
+}
+
+.blog-excerpt {
+    color: #6c757d;
+    line-height: 1.6;
+}
+
+.read-more-link {
+    color: #ff6b35;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.read-more-link:hover {
+    color: #e55a2b;
 }
 </style>
 
@@ -470,46 +588,23 @@ include 'includes/header.php';
             <p class="text-muted">Stay updated with automotive news, tips, and industry insights</p>
         </div>
         
+        <?php if (!empty($blog_posts)): ?>
         <div class="row g-4">
-            <?php
-            // Sample blog posts - in real implementation, this would come from database
-            $blog_posts = [
-                [
-                    'title' => 'Top five secrets for car maintenance',
-                    'author' => 'Admin',
-                    'date' => 'Aug 20, 2023',
-                    'excerpt' => 'Learn the essential tips and tricks to keep your vehicle running smoothly for years to come.',
-                    'image_bg' => 'b19cd9'
-                ],
-                [
-                    'title' => 'How to choose the right car insurance',
-                    'author' => 'Sarah Johnson',
-                    'date' => 'Aug 18, 2023',
-                    'excerpt' => 'Navigate through different insurance options and find the perfect coverage for your needs.',
-                    'image_bg' => '5cb85c'
-                ],
-                [
-                    'title' => 'Electric vs Gasoline: Complete guide',
-                    'author' => 'Mike Chen',
-                    'date' => 'Aug 15, 2023',
-                    'excerpt' => 'Compare the pros and cons of electric and gasoline vehicles in our comprehensive guide.',
-                    'image_bg' => 'f0ad4e'
-                ]
-            ];
-            
-            foreach($blog_posts as $post):
-            ?>
+            <?php foreach($blog_posts as $post): ?>
             <div class="col-lg-4 col-md-6">
-                <div class="card h-100 border-0 shadow-sm">
-                    <img src="https://via.placeholder.com/400x250/<?php echo $post['image_bg']; ?>/ffffff?text=<?php echo urlencode(substr($post['title'], 0, 20)); ?>" class="card-img-top" alt="<?php echo htmlspecialchars($post['title']); ?>">
+                <div class="card blog-card h-100 border-0 shadow-sm">
+                    <img src="<?php echo htmlspecialchars($post['image_path']); ?>" 
+                         class="blog-image card-img-top" 
+                         alt="<?php echo htmlspecialchars($post['title']); ?>"
+                         onerror="this.src='https://via.placeholder.com/400x250/6c5ce7/ffffff?text=<?php echo urlencode(substr($post['title'], 0, 20)); ?>'">
                     <div class="card-body d-flex flex-column">
-                        <div class="d-flex justify-content-between text-muted mb-2">
-                            <small><i class="bi bi-person"></i> By <?php echo htmlspecialchars($post['author']); ?></small>
-                            <small><i class="bi bi-calendar"></i> <?php echo $post['date']; ?></small>
+                        <div class="blog-meta d-flex justify-content-between text-muted mb-2">
+                            <small><i class="bi bi-person"></i> By <?php echo htmlspecialchars($post['author_name']); ?></small>
+                            <small><i class="bi bi-calendar"></i> <?php echo $post['formatted_date']; ?></small>
                         </div>
-                        <h5 class="card-title fw-bold"><?php echo htmlspecialchars($post['title']); ?></h5>
-                        <p class="card-text text-muted flex-grow-1"><?php echo htmlspecialchars($post['excerpt']); ?></p>
-                        <a href="blog-single.php" class="btn btn-link text-warning text-decoration-none p-0 fw-semibold">
+                        <h5 class="blog-title card-title fw-bold"><?php echo htmlspecialchars($post['title']); ?></h5>
+                        <p class="blog-excerpt card-text text-muted flex-grow-1"><?php echo htmlspecialchars($post['excerpt']); ?></p>
+                        <a href="<?php echo $post['url']; ?>" class="read-more-link text-decoration-none fw-semibold">
                             Read More <i class="bi bi-arrow-right"></i>
                         </a>
                     </div>
@@ -517,6 +612,24 @@ include 'includes/header.php';
             </div>
             <?php endforeach; ?>
         </div>
+        
+        <?php if (count($blog_posts) >= 3): ?>
+        <div class="text-center mt-5">
+            <a href="blog.php" class="btn btn-warning btn-lg px-5">View All Posts</a>
+        </div>
+        <?php endif; ?>
+        
+        <?php else: ?>
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <div class="bg-white p-5 rounded shadow-sm">
+                    <i class="bi bi-journal-text display-1 text-muted mb-3"></i>
+                    <h4 class="text-muted">No Blog Posts Yet</h4>
+                    <p class="text-muted">Blog posts will appear here once they are published by the admin.</p>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
 </section>
 
@@ -546,6 +659,17 @@ document.addEventListener('DOMContentLoaded', function() {
         dot.addEventListener('click', function() {
             dots.forEach(d => d.classList.remove('active'));
             this.classList.add('active');
+        });
+    });
+    
+    // Handle image loading errors for blog posts
+    const blogImages = document.querySelectorAll('.blog-image');
+    blogImages.forEach(img => {
+        img.addEventListener('error', function() {
+            if (!this.hasAttribute('data-fallback-set')) {
+                this.src = 'https://via.placeholder.com/400x250/6c5ce7/ffffff?text=Blog+Post';
+                this.setAttribute('data-fallback-set', 'true');
+            }
         });
     });
 });
