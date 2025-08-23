@@ -5,12 +5,12 @@ require_once 'config/config.php';
 // Get banner data from database
 try {
     require_once 'config/database.php';
-    // Get the latest banner by ID
-    $bannerStmt = $conn->prepare("SELECT * FROM header_banner ORDER BY id DESC LIMIT 1");
+    
+    // Get the latest banner by upload time
+    $bannerStmt = $conn->prepare("SELECT * FROM header_banner ORDER BY updated_at DESC LIMIT 1");
     $bannerStmt->execute();
     $banner = $bannerStmt->fetch(PDO::FETCH_ASSOC);
     
-    // If no banner exists, create a default one
     if (!$banner) {
         $defaultBanner = str_replace(BASE_URL, '', DEFAULT_BANNER);
         $insertStmt = $conn->prepare("INSERT INTO header_banner (background_image, title, subtitle) VALUES (:bg_image, 'Welcome to Car Showroom', 'Find your dream car today')");
@@ -20,36 +20,48 @@ try {
         $banner = $bannerStmt->fetch(PDO::FETCH_ASSOC);
     }
     
-    // Process background image path
-    if (empty($banner['background_image'])) {
-        $banner['background_image'] = DEFAULT_BANNER;
-    } else {
-        // If the path doesn't start with http or /, add BASE_URL
-        if (strpos($banner['background_image'], 'http') !== 0 && $banner['background_image'][0] !== '/') {
-            $banner['background_image'] = BASE_URL . '/' . ltrim($banner['background_image'], '/');
-        } elseif ($banner['background_image'][0] === '/' && strpos($banner['background_image'], BASE_URL) !== 0) {
-            // If it's an absolute path but missing BASE_URL
-            $banner['background_image'] = BASE_URL . $banner['background_image'];
+    
+    // Process background image path - don't fall back to default if we have a valid path
+    if (!empty($banner['background_image'])) {
+        // For web display, add /carshowroom prefix if not already present
+        if (strpos($banner['background_image'], '/carshowroom/') !== 0) {
+            $web_path = '/carshowroom' . $banner['background_image'];
+        } else {
+            $web_path = $banner['background_image'];
         }
+    } else {
+        // Only use default if no image path exists
+        $web_path = DEFAULT_BANNER;
     }
     
-    // Debug information
-    $banner['debug'] = [
-        'file_exists' => file_exists($_SERVER['DOCUMENT_ROOT'] . parse_url($banner['background_image'], PHP_URL_PATH)),
-        'full_path' => $_SERVER['DOCUMENT_ROOT'] . parse_url($banner['background_image'], PHP_URL_PATH),
-        'banner_path' => $banner['background_image'],
-        'document_root' => $_SERVER['DOCUMENT_ROOT']
-    ];
+    // Use web path for display
+    $banner['background_image'] = $web_path;
+    
+    // Get featured cars from database
+    $featuredStmt = $conn->prepare("SELECT * FROM featured_cars WHERE is_active = 'yes' ORDER BY sort_order ASC, created_at DESC LIMIT 6");
+    $featuredStmt->execute();
+    $featured_cars = $featuredStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Get latest cars from database
+    $latestStmt = $conn->prepare("SELECT * FROM latest_cars WHERE is_active = 'yes' ORDER BY sort_order ASC, created_at DESC LIMIT 6");
+    $latestStmt->execute();
+    $latest_cars = $latestStmt->fetchAll(PDO::FETCH_ASSOC);
     
 } catch(PDOException $e) {
-    error_log('Banner Error: ' . $e->getMessage());
-    $banner = [
-        'background_image' => DEFAULT_BANNER,
-        'bottom_image' => '',
-        'title' => 'Car Showroom',
-        'subtitle' => 'Find your dream car today',
-        'debug' => ['error' => $e->getMessage()]
-    ];
+    error_log('Database Error: ' . $e->getMessage());
+    // Only override banner if it wasn't already set successfully
+    if (!isset($banner) || empty($banner)) {
+        $banner = [
+            'background_image' => DEFAULT_BANNER,
+            'bottom_image' => '',
+            'title' => 'Car Showroom',
+            'subtitle' => 'Find your dream car today',
+            'debug' => ['error' => $e->getMessage()]
+        ];
+    }
+    // Set empty arrays for cars if database fails
+    $featured_cars = [];
+    $latest_cars = [];
 }
 
 // Get latest published blog posts
@@ -131,9 +143,11 @@ include 'includes/header.php';
 
 <style>
 .hero-section {
-    background: url('<?php 
+    background-image: url('<?php 
         echo htmlspecialchars($banner['background_image'], ENT_QUOTES, 'UTF-8');
-    ?>') no-repeat center center;
+    ?>?v=<?php echo time(); ?>');
+    background-repeat: no-repeat;
+    background-position: center center;
     background-size: cover;
     position: relative;
     overflow: hidden;
@@ -335,7 +349,7 @@ include 'includes/header.php';
 </style>
 
 <!-- Hero/Banner Section -->
-<section class="hero-section position-relative">
+<section class="hero-section position-relative" style="background-image: url('<?php echo htmlspecialchars($banner['background_image'], ENT_QUOTES, 'UTF-8'); ?>?v=<?php echo time(); ?>'); background-size: cover; background-position: center; background-repeat: no-repeat;">
     <div class="container">
         <div class="row justify-content-center text-center">
             <div class="col-lg-8">
@@ -396,110 +410,51 @@ include 'includes/header.php';
         </div>
         
         <div class="row g-4">
-            <!-- Featured Car 1 -->
-            <div class="col-lg-4 col-md-6">
-                <div class="card car-card h-100">
-                    <div class="position-relative">
-                        <span class="badge bg-danger position-absolute m-3" style="z-index: 2;">Featured</span>
-                        <img src="https://via.placeholder.com/400x250/2c3e50/ffffff?text=2018+McLaren+650S" class="card-img-top" alt="McLaren 650S">
-                    </div>
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold">2018 McLaren 650S</h5>
-                        <div class="d-flex justify-content-between text-muted mb-3">
-                            <small><i class="bi bi-eye"></i> 2,510 Views</small>
-                            <small><i class="bi bi-clock"></i> 3 weeks ago</small>
-                        </div>
-                        <div class="car-specs d-flex justify-content-between py-2 border-top border-bottom mb-3">
-                            <div class="text-center">
-                                <div><i class="bi bi-calendar2"></i></div>
-                                <small>2018</small>
-                            </div>
-                            <div class="text-center">
-                                <div><i class="bi bi-speedometer2"></i></div>
-                                <small>12k km</small>
-                            </div>
-                            <div class="text-center">
-                                <div><i class="bi bi-fuel-pump"></i></div>
-                                <small>Petrol</small>
-                            </div>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0 text-warning price-tag">$ 89,500</h5>
-                            <span class="badge bg-success rounded-pill">Certified</span>
-                        </div>
-                    </div>
+            <?php if (empty($featured_cars)): ?>
+                <div class="col-12 text-center py-5">
+                    <i class="bi bi-car-front fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No featured cars available at the moment. Please check back later.</p>
                 </div>
-            </div>
-
-            <!-- Featured Car 2 -->
-            <div class="col-lg-4 col-md-6">
-                <div class="card car-card h-100">
-                    <div class="position-relative">
-                        <span class="badge bg-danger position-absolute m-3" style="z-index: 2;">Featured</span>
-                        <img src="https://via.placeholder.com/400x250/34495e/ffffff?text=2019+Lexus+RX+350" class="card-img-top" alt="Lexus RX 350">
-                    </div>
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold">2019 Lexus RX 350</h5>
-                        <div class="d-flex justify-content-between text-muted mb-3">
-                            <small><i class="bi bi-eye"></i> 1,847 Views</small>
-                            <small><i class="bi bi-clock"></i> 1 week ago</small>
-                        </div>
-                        <div class="car-specs d-flex justify-content-between py-2 border-top border-bottom mb-3">
-                            <div class="text-center">
-                                <div><i class="bi bi-calendar2"></i></div>
-                                <small>2019</small>
+            <?php else: ?>
+                <?php foreach ($featured_cars as $car): ?>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card car-card h-100">
+                            <div class="position-relative">
+                                <span class="badge bg-danger position-absolute m-3" style="z-index: 2;">Featured</span>
+                                <img src="<?php echo htmlspecialchars($car['image_url']); ?>" 
+                                     class="card-img-top" 
+                                     alt="<?php echo htmlspecialchars($car['title']); ?>"
+                                     onerror="this.src='https://via.placeholder.com/400x250/6c5ce7/ffffff?text=<?php echo urlencode($car['title']); ?>'">
                             </div>
-                            <div class="text-center">
-                                <div><i class="bi bi-speedometer2"></i></div>
-                                <small>25k km</small>
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold"><?php echo htmlspecialchars($car['title']); ?></h5>
+                                <div class="d-flex justify-content-between text-muted mb-3">
+                                    <small><i class="bi bi-eye"></i> <?php echo htmlspecialchars($car['views']); ?> Views</small>
+                                    <small><i class="bi bi-clock"></i> <?php echo htmlspecialchars($car['time_posted']); ?></small>
+                                </div>
+                                <div class="car-specs d-flex justify-content-between py-2 border-top border-bottom mb-3">
+                                    <div class="text-center">
+                                        <div><i class="bi bi-calendar2"></i></div>
+                                        <small><?php echo htmlspecialchars($car['year']); ?></small>
+                                    </div>
+                                    <div class="text-center">
+                                        <div><i class="bi bi-speedometer2"></i></div>
+                                        <small><?php echo htmlspecialchars($car['mileage']); ?></small>
+                                    </div>
+                                    <div class="text-center">
+                                        <div><i class="bi bi-fuel-pump"></i></div>
+                                        <small><?php echo htmlspecialchars($car['fuel_type']); ?></small>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0 text-warning price-tag"><?php echo htmlspecialchars($car['price']); ?></h5>
+                                    <span class="badge <?php echo htmlspecialchars($car['status_class']); ?> rounded-pill"><?php echo htmlspecialchars($car['condition']); ?></span>
+                                </div>
                             </div>
-                            <div class="text-center">
-                                <div><i class="bi bi-fuel-pump"></i></div>
-                                <small>Hybrid</small>
-                            </div>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0 text-warning price-tag">$ 52,900</h5>
-                            <span class="badge bg-primary rounded-pill">New</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Featured Car 3 -->
-            <div class="col-lg-4 col-md-6">
-                <div class="card car-card h-100">
-                    <div class="position-relative">
-                        <span class="badge bg-danger position-absolute m-3" style="z-index: 2;">Featured</span>
-                        <img src="https://via.placeholder.com/400x250/e74c3c/ffffff?text=2017+Mercedes+SL+Class" class="card-img-top" alt="Mercedes SL Class">
-                    </div>
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold">2017 Mercedes SL Class</h5>
-                        <div class="d-flex justify-content-between text-muted mb-3">
-                            <small><i class="bi bi-eye"></i> 3,205 Views</small>
-                            <small><i class="bi bi-clock"></i> 5 days ago</small>
-                        </div>
-                        <div class="car-specs d-flex justify-content-between py-2 border-top border-bottom mb-3">
-                            <div class="text-center">
-                                <div><i class="bi bi-calendar2"></i></div>
-                                <small>2017</small>
-                            </div>
-                            <div class="text-center">
-                                <div><i class="bi bi-speedometer2"></i></div>
-                                <small>18k km</small>
-                            </div>
-                            <div class="text-center">
-                                <div><i class="bi bi-fuel-pump"></i></div>
-                                <small>Petrol</small>
-                            </div>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0 text-warning price-tag">$ 75,500</h5>
-                            <span class="badge bg-info rounded-pill">Premium</span>
                         </div>
                     </div>
-                </div>
-            </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </div>
     </div>
 </section>
@@ -513,36 +468,34 @@ include 'includes/header.php';
         </div>
         
         <div class="row g-4">
-            <?php
-            // Sample latest cars data - in real implementation, this would come from database
-            $latest_cars = [
-                ['name' => '2018 McLaren 650S', 'views' => '2,156', 'time' => '3 weeks ago', 'price' => '$ 79,900', 'status' => 'Used', 'status_class' => 'bg-warning'],
-                ['name' => 'Lexus LFA - 2014', 'views' => '1,823', 'time' => '2 weeks ago', 'price' => '$ 385,450', 'status' => 'Rare', 'status_class' => 'bg-danger'],
-                ['name' => '2015 Lexus RC 350', 'views' => '945', 'time' => '1 week ago', 'price' => '$ 38,750', 'status' => 'Certified', 'status_class' => 'bg-success'],
-                ['name' => '2011 Nissan Juke SL', 'views' => '672', 'time' => '4 days ago', 'price' => '$ 18,500', 'status' => 'Good', 'status_class' => 'bg-info'],
-                ['name' => '2013 Lexus RX 350', 'views' => '1,234', 'time' => '6 days ago', 'price' => '$ 26,900', 'status' => 'Featured', 'status_class' => 'bg-primary'],
-                ['name' => '2019 Volkswagen Touareg', 'views' => '856', 'time' => '1 week ago', 'price' => '$ 48,200', 'status' => 'New', 'status_class' => 'bg-success']
-            ];
-            
-            foreach($latest_cars as $index => $car): 
-            ?>
-            <div class="col-lg-4 col-md-6">
-                <div class="card car-card h-100">
-                    <img src="https://via.placeholder.com/400x250/<?php echo sprintf('%06X', mt_rand(0, 0xFFFFFF)); ?>/ffffff?text=<?php echo urlencode($car['name']); ?>" class="card-img-top" alt="<?php echo htmlspecialchars($car['name']); ?>">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold"><?php echo htmlspecialchars($car['name']); ?></h5>
-                        <div class="d-flex justify-content-between text-muted mb-3">
-                            <small><i class="bi bi-eye"></i> <?php echo $car['views']; ?> Views</small>
-                            <small><i class="bi bi-clock"></i> <?php echo $car['time']; ?></small>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h6 class="mb-0 text-warning price-tag"><?php echo $car['price']; ?></h6>
-                            <span class="badge <?php echo $car['status_class']; ?> rounded-pill"><?php echo $car['status']; ?></span>
+            <?php if (empty($latest_cars)): ?>
+                <div class="col-12 text-center py-5">
+                    <i class="bi bi-clock fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No latest cars available at the moment. Please check back later.</p>
+                </div>
+            <?php else: ?>
+                <?php foreach ($latest_cars as $car): ?>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card car-card h-100">
+                            <img src="<?php echo htmlspecialchars($car['image_url']); ?>" 
+                                 class="card-img-top" 
+                                 alt="<?php echo htmlspecialchars($car['title']); ?>"
+                                 onerror="this.src='https://via.placeholder.com/400x250/6c5ce7/ffffff?text=<?php echo urlencode($car['title']); ?>'">
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold"><?php echo htmlspecialchars($car['title']); ?></h5>
+                                <div class="d-flex justify-content-between text-muted mb-3">
+                                    <small><i class="bi bi-eye"></i> <?php echo htmlspecialchars($car['views']); ?> Views</small>
+                                    <small><i class="bi bi-clock"></i> <?php echo htmlspecialchars($car['time_posted']); ?></small>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0 text-warning price-tag"><?php echo htmlspecialchars($car['price']); ?></h6>
+                                    <span class="badge <?php echo htmlspecialchars($car['status_class']); ?> rounded-pill"><?php echo htmlspecialchars($car['status']); ?></span>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-            <?php endforeach; ?>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </div>
         
         <div class="text-center mt-5">

@@ -59,7 +59,7 @@
             </div>
 
             <div class="nav-item">
-                <a href="#" class="nav-link">
+                <a href="/carshowroom/admin/sellers/sellers.php" class="nav-link">
                     <i class="fas fa-users"></i>
                     <span>Sellers Management</span>
                 </a>
@@ -91,8 +91,8 @@
                 </a>
                 <div class="submenu">
                     <a href="/carshowroom/admin/home/header-banner.php" class="submenu-item">Header Banner</a>
-                    <a href="#" class="submenu-item">Featured Cars Section</a>
-                    <a href="#" class="submenu-item">Latest Cars Section</a>
+                    <a href="/carshowroom/admin/home/featured-section.php" class="submenu-item">Featured Cars Section</a>
+                    <a href="/carshowroom/admin/home/latest-cars-section.php" class="submenu-item">Latest Cars Section</a>
                     <a href="#" class="submenu-item">Testimonial Management</a>
                     <a href="#" class="submenu-item">Blog Section</a>
                 </div>
@@ -177,46 +177,3 @@
             </div>
         </nav>
     </div>
-
-    <script>
-        function toggleSubmenu(link) {
-            const submenu = link.nextElementSibling;
-            const arrow = link.querySelector('.dropdown-arrow');
-
-            if (submenu.style.maxHeight) {
-                submenu.style.maxHeight = null;
-                arrow.classList.remove('expanded');
-            } else {
-                // Close any other open submenus
-                const openSubmenus = document.querySelectorAll('.submenu');
-                openSubmenus.forEach(openSubmenu => {
-                    if (openSubmenu !== submenu) {
-                        openSubmenu.style.maxHeight = null;
-                        const openArrow = openSubmenu.previousElementSibling.querySelector('.dropdown-arrow');
-                        if (openArrow) {
-                            openArrow.classList.remove('expanded');
-                        }
-                    }
-                });
-
-                submenu.style.maxHeight = submenu.scrollHeight + "px";
-                arrow.classList.add('expanded');
-            }
-        }
-
-        document.addEventListener("DOMContentLoaded", function() {
-            const activeLink = document.querySelector('.nav-link.active');
-            if (activeLink) {
-                const submenu = activeLink.closest('.submenu');
-                if (submenu) {
-                    const parentLink = submenu.previousElementSibling;
-                    parentLink.classList.add('active');
-                    submenu.style.maxHeight = submenu.scrollHeight + "px";
-                    const arrow = parentLink.querySelector('.dropdown-arrow');
-                    if (arrow) {
-                        arrow.classList.add('expanded');
-                    }
-                }
-            }
-        });
-    </script>

@@ -49,10 +49,10 @@ try {
 
 $admin_name = $_SESSION['user_name'] ?? 'Admin';
 
-// Get current banner data
+// Get current banner data (latest banner)
 $banner_data = [];
 try {
-    $stmt = $conn->query("SELECT * FROM header_banner WHERE id = 1");
+    $stmt = $conn->query("SELECT * FROM header_banner ORDER BY updated_at DESC LIMIT 1");
     $banner_data = $stmt->fetch(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     $error_message = "Error fetching banner data: " . $e->getMessage();
@@ -92,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // Get existing banner data if any
-        $stmt = $conn->query("SELECT * FROM header_banner WHERE id = 1");
+        $stmt = $conn->query("SELECT * FROM header_banner ORDER BY updated_at DESC LIMIT 1");
         $banner_data = $stmt->fetch(PDO::FETCH_ASSOC);
         
         // Get form data
@@ -131,22 +131,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new Exception("Banner image is required.");
         }
 
-        // Insert/update DB
+        // Insert new banner record (let ID auto-increment)
         $stmt = $conn->prepare("
-            INSERT INTO header_banner (id, background_image, title, subtitle, updated_at)
-            VALUES (1, ?, ?, ?, NOW())
-            ON DUPLICATE KEY UPDATE 
-            background_image = VALUES(background_image),
-            title = VALUES(title),
-            subtitle = VALUES(subtitle),
-            updated_at = NOW()
+            INSERT INTO header_banner (background_image, title, subtitle, created_at, updated_at)
+            VALUES (?, ?, ?, NOW(), NOW())
         ");
         
         if ($stmt->execute([$background_image, $title, $subtitle])) {
-            $success_message = "Banner saved successfully!";
-            // Refresh banner data
-            $stmt = $conn->query("SELECT * FROM header_banner WHERE id = 1");
+            $success_message = "Banner saved successfully! New ID: " . $conn->lastInsertId();
+            debug_log('New banner inserted with ID: ' . $conn->lastInsertId());
+            // Refresh banner data - get the latest banner
+            $stmt = $conn->query("SELECT * FROM header_banner ORDER BY updated_at DESC LIMIT 1");
             $banner_data = $stmt->fetch(PDO::FETCH_ASSOC);
+            debug_log('Latest banner after insert: ' . print_r($banner_data, true));
         } else {
             throw new Exception("Failed to save banner data");
         }
@@ -159,9 +156,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // If no banner data exists, create a default entry
 if (empty($banner_data)) {
     try {
-        $stmt = $conn->prepare("INSERT INTO header_banner (id, background_image, updated_at) VALUES (1, '', NOW())");
+        $stmt = $conn->prepare("INSERT INTO header_banner (background_image, updated_at) VALUES ('', NOW())");
         $stmt->execute();
-        $banner_data = ['id' => 1, 'background_image' => '', 'updated_at' => date('Y-m-d H:i:s')];
+        $banner_data = ['id' => $conn->lastInsertId(), 'background_image' => '', 'updated_at' => date('Y-m-d H:i:s')];
     } catch(PDOException $e) {
         $error_message = "Database error: " . $e->getMessage();
         debug_log($error_message);
