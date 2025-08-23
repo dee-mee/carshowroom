@@ -519,36 +519,6 @@ include 'includes/header.php';
         </div>
     </div>
 </section>
-
-<!-- Customer Reviews -->
-<section class="testimonials py-5">
-    <div class="container">
-        <div class="section-title text-center mb-5">
-            <h2>Customer Reviews</h2>
-            <p class="text-muted">What our clients say about our exceptional service and quality vehicles</p>
-        </div>
-        
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="testimonial-item text-center">
-                    <img src="https://via.placeholder.com/100x100/4a90e2/ffffff?text=MK" class="rounded-circle mb-3" alt="Mamun Khan">
-                    <h5 class="fw-bold">Mamun Khan</h5>
-                    <p class="text-muted">CEO of Apple</p>
-                    <div class="testimonial-text bg-light p-4 my-4 rounded">
-                        <i class="bi bi-quote display-6 d-block text-warning mb-3"></i>
-                        <p class="mb-0 fst-italic">"Outstanding service and incredible selection of premium vehicles. The team went above and beyond to help me find the perfect car. The verification process gave me complete confidence in my purchase. Highly recommended for anyone looking for quality and reliability!"</p>
-                    </div>
-                    <div class="testimonial-dots">
-                        <span class="dot active"></span>
-                        <span class="dot"></span>
-                        <span class="dot"></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
 <!-- Latest Blog -->
 <section class="latest-blog py-5 bg-light">
     <div class="container">

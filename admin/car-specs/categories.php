@@ -237,8 +237,9 @@ $showing_end = min($offset + $entries_per_page, $total_categories);
             background: none;
             border: none;
             font-size: 1.5rem;
-            color: #333;
+            color: white;
             cursor: pointer;
+            margin-right: auto;
         }
 
         .user-info {
@@ -309,8 +310,8 @@ $showing_end = min($offset + $entries_per_page, $total_categories);
             margin: 5px 0;
         }
 
-        /* Page Content */
-        .page-content {
+        /* Dashboard Content */
+        .dashboard-content {
             padding: 30px;
         }
 
@@ -615,38 +616,16 @@ $showing_end = min($offset + $entries_per_page, $total_categories);
 
         /* Responsive Design */
         @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-
-            .sidebar.mobile-open {
-                transform: translateX(0);
-            }
-
             .main-content {
                 margin-left: 0;
-            }
-
-            .mobile-toggle {
-                display: block;
             }
 
             .page-content {
                 padding: 20px;
             }
 
-            .section-controls {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .controls-left {
-                flex-direction: column;
-                gap: 15px;
-            }
-
-            .search-control input {
-                min-width: 100%;
+            .table-responsive {
+                overflow-x: auto;
             }
 
             .table-footer {
@@ -658,17 +637,14 @@ $showing_end = min($offset + $entries_per_page, $total_categories);
     </style>
 </head>
 <body>
-    <?php 
-    $base_path = '/opt/lampp/htdocs/carshowroom/admin/';
-    require_once $base_path . 'includes/sidebar.php'; 
-    ?>
+    <?php require_once __DIR__ . '/../includes/sidebar.php'; ?>
 
     <!-- Main Content -->
     <div class="main-content">
-        <?php require_once $base_path . 'includes/navbar.php'; ?>
+        <?php require_once __DIR__ . '/../includes/navbar.php'; ?>
 
-        <!-- Page Content -->
-        <div class="page-content">
+        <!-- Dashboard Content -->
+        <div class="dashboard-content">
             <!-- Page Header -->
             <div class="page-header">
                 <h1 class="page-title">
@@ -906,9 +882,30 @@ $showing_end = min($offset + $entries_per_page, $total_categories);
             }
         });
 
-        // Toggle sidebar on mobile
+        // Sidebar dropdown functionality
+        function toggleSubmenu(element) {
+            const submenu = element.nextElementSibling;
+            const arrow = element.querySelector('.dropdown-arrow');
+            
+            // Close all other submenus
+            document.querySelectorAll('.submenu.show').forEach(menu => {
+                if (menu !== submenu) {
+                    menu.classList.remove('show');
+                    menu.previousElementSibling.classList.remove('expanded');
+                }
+            });
+            
+            // Toggle current submenu
+            submenu.classList.toggle('show');
+            element.classList.toggle('expanded');
+        }
+
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('mobile-open');
+        }
+
+        function toggleDropdown() {
+            document.getElementById('userDropdown').classList.toggle('show');
         }
 
         // Close sidebar when clicking outside on mobile
@@ -920,6 +917,23 @@ $showing_end = min($offset + $entries_per_page, $total_categories);
                 !sidebar.contains(event.target) && 
                 !mobileToggle.contains(event.target)) {
                 sidebar.classList.remove('mobile-open');
+            }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('userDropdown');
+            const userDropdown = document.querySelector('.user-dropdown');
+            
+            if (!userDropdown.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        // Close sidebar on window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                document.getElementById('sidebar').classList.remove('mobile-open');
             }
         });
     </script>

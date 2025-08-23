@@ -51,11 +51,11 @@
                 </a>
                 <div class="submenu">
                     <a href="#" class="submenu-item">All Cars</a>
-                    <a href="featured-section.php" class="submenu-item">Featured Cars</a>
-                    <a href="latest-cars-section.php" class="submenu-item">Latest Cars</a>
-                    <a href="testimonials.php" class="submenu-item">Testimonials</a>
-                    <a href="header-banner.php" class="submenu-item">Header Banner</a>
-                    <a href="blog-section.php" class="submenu-item">Blog Section</a>
+                    <a href="/carshowroom/admin/home/featured-section.php" class="submenu-item">Featured Cars</a>
+                    <a href="/carshowroom/admin/home/latest-cars-section.php" class="submenu-item">Latest Cars</a>
+                    <a href="/carshowroom/admin/home/testimonials.php" class="submenu-item">Testimonials</a>
+                    <a href="/carshowroom/admin/home/header-banner.php" class="submenu-item">Header Banner</a>
+                    <a href="/carshowroom/admin/home/blog-section.php" class="submenu-item">Blog Section</a>
                 </div>
             </div>
 
@@ -94,8 +94,8 @@
                     <a href="/carshowroom/admin/home/header-banner.php" class="submenu-item">Header Banner</a>
                     <a href="/carshowroom/admin/home/featured-section.php" class="submenu-item">Featured Cars Section</a>
                     <a href="/carshowroom/admin/home/latest-cars-section.php" class="submenu-item">Latest Cars Section</a>
-                    <a href="#" class="submenu-item">Testimonial Management</a>
-                    <a href="#" class="submenu-item">Blog Section</a>
+                    <a href="/carshowroom/admin/home/testimonials.php" class="submenu-item">Testimonial Management</a>
+                    <a href="/carshowroom/admin/home/blog-section.php" class="submenu-item">Blog Section</a>
                 </div>
             </div>
 
@@ -121,7 +121,7 @@
                 </a>
                 <div class="submenu">
                     <a href="#" class="submenu-item">SMTP Configuration</a>
-                    <a href="#" class-="submenu-item">Email Templates</a>
+                    <a href="#" class="submenu-item">Email Templates</a>
                 </div>
             </div>
 
@@ -154,7 +154,7 @@
                 <div class="submenu">
                     <a href="#" class="submenu-item">Meta Tags</a>
                     <a href="#" class="submenu-item">Sitemap</a>
-                    <a href="#" class_name="submenu-item">Robots.txt</a>
+                    <a href="#" class="submenu-item">Robots.txt</a>
                 </div>
             </div>
 
