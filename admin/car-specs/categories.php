@@ -1,14 +1,14 @@
 <?php
-// Enable error reporting
+// Enable error reporting at the very top
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-<?php
+// Start session
 session_start();
 
 // Check if admin is logged in and has admin privileges
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
-    header("Location: ../login.php");
+    header("Location: ../../admin/login.php");
     exit();
 }
 
@@ -641,11 +641,11 @@ $showing_end = min($offset + $entries_per_page, $total_categories);
     </style>
 </head>
 <body>
-    <?php require_once __DIR__ . '/../includes/sidebar.php'; ?>
+    <?php require_once '../includes/sidebar.php'; ?>
 
     <!-- Main Content -->
     <div class="main-content">
-        <?php require_once __DIR__ . '/../includes/navbar.php'; ?>
+        <?php require_once '../includes/navbar.php'; ?>
 
         <!-- Dashboard Content -->
         <div class="dashboard-content">
