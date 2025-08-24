@@ -184,57 +184,92 @@ $stats = $stmt->fetch(PDO::FETCH_ASSOC);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Featured Cars Management - Car Showroom</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>Manage Featured Cars - Admin Panel</title>
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="../assets/css/admin-layout.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../../assets/css/admin-layout.css">
     <style>
-        /* Page-specific styles */
-        .featured-cars-container {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        
+        .preview-image {
+            max-width: 100px;
+            max-height: 100px;
+            margin-top: 10px;
         }
-
+        .table th, .table td {
+            vertical-align: middle;
+        }
         .status-badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.75rem;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
             font-weight: 500;
-            text-transform: uppercase;
         }
-
-        .status-yes {
+        .status-active {
             background-color: #d4edda;
             color: #155724;
         }
-
-        .status-no {
+        .status-inactive {
             background-color: #f8d7da;
             color: #721c24;
         }
-
-        .action-btn {
-            padding: 5px 10px;
-            margin: 2px;
-            border-radius: 4px;
-            font-size: 12px;
-            text-decoration: none;
-            display: inline-block;
+        .featured-cars-container {
+            margin-top: 30px;
+        }
+        .card {
+            margin-bottom: 30px;
+            border: none;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+        }
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid rgba(0,0,0,.125);
+            padding: 1rem 1.25rem;
+        }
+        .card-header h5 {
+            margin: 0;
+            font-weight: 600;
+            color: #333;
+        }
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        .btn-action {
+            padding: 0.25rem 0.5rem;
+            margin: 0 0.25rem;
+        }
+        .table-responsive {
+            margin-top: 1rem;
+        }
+        .page-header {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eaeaea;
+        }
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+        .page-title i {
+            color: #6c5ce7;
+            margin-right: 10px;
         }
     </style>
 </head>
 <body>
-    <?php $active_page = 'home'; ?>
     <?php require_once '../includes/sidebar.php'; ?>
 
     <!-- Main Content -->
     <div class="main-content">
         <?php require_once '../includes/navbar.php'; ?>
 
-        <!-- Page Content -->
-        <div class="page-content">
+        <!-- Dashboard Content -->
+        <div class="dashboard-content" style="padding: 20px;">
             <!-- Page Header -->
             <div class="page-header">
                 <h1 class="page-title">
@@ -300,6 +335,7 @@ $stats = $stmt->fetch(PDO::FETCH_ASSOC);
                                 <label for="car_image" class="form-label">Car Image <span class="text-danger">*</span></label>
                                 <input type="file" class="form-control" id="car_image" name="car_image" accept="image/*" required>
                                 <small class="form-text text-muted">Supported formats: JPG, PNG, GIF, WebP</small>
+                                <div id="imagePreview"></div>
                             </div>
                         </div>
                         
@@ -383,8 +419,8 @@ $stats = $stmt->fetch(PDO::FETCH_ASSOC);
                         <p class="text-muted">No featured cars found. Add your first featured car using the form above.</p>
                     </div>
                 <?php else: ?>
-                    <div class="table-wrapper">
-                        <table class="featured-cars-table">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
                             <thead>
                                 <tr>
                                     <th>Image</th>
@@ -402,7 +438,7 @@ $stats = $stmt->fetch(PDO::FETCH_ASSOC);
                                     <tr>
                                         <td>
                                             <img src="<?php echo htmlspecialchars($car['image_url']); ?>" 
-                                                 alt="Car" class="car-image" 
+                                                 alt="Car" class="img-thumbnail" 
                                                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                             <div style="display:none; width:60px; height:40px; background:#6c5ce7; color:white; display:flex; align-items:center; justify-content:center; font-size:10px; border-radius:4px;">Car</div>
                                         </td>
@@ -411,22 +447,22 @@ $stats = $stmt->fetch(PDO::FETCH_ASSOC);
                                         <td><?php echo $car['year']; ?></td>
                                         <td><?php echo htmlspecialchars($car['condition_status']); ?></td>
                                         <td>
-                                            <span class="status-badge status-<?php echo $car['status']; ?>">
+                                            <span class="status-badge <?php echo $car['status'] === 'active' ? 'status-active' : 'status-inactive'; ?>">
                                                 <?php echo ucfirst($car['status']); ?>
                                             </span>
                                         </td>
                                         <td><?php echo $car['sort_order']; ?></td>
                                         <td>
-                                            <button class="action-btn btn-primary" onclick="editCar(<?php echo htmlspecialchars(json_encode($car)); ?>)">
+                                            <button class="btn btn-primary btn-action" onclick="editCar(<?php echo htmlspecialchars(json_encode($car)); ?>)">
                                                 <i class="fas fa-edit"></i> Edit
                                             </button>
                                             <a href="?toggle_status=<?php echo $car['id']; ?>" 
-                                               class="action-btn btn-warning"
+                                               class="btn btn-warning btn-action"
                                                onclick="return confirm('Are you sure you want to change the status?')">
                                                 <i class="fas fa-toggle-on"></i> Toggle
                                             </a>
                                             <a href="?delete=<?php echo $car['id']; ?>" 
-                                               class="action-btn btn-danger"
+                                               class="btn btn-danger btn-action"
                                                onclick="return confirm('Are you sure you want to delete this featured car?')">
                                                 <i class="fas fa-trash"></i> Delete
                                             </a>
@@ -441,27 +477,29 @@ $stats = $stmt->fetch(PDO::FETCH_ASSOC);
         </div>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Auto-hide alerts after 5 seconds
+        $(document).ready(function() {
+            setTimeout(function() {
+                $('.alert').fadeOut('slow');
+            }, 5000);
+
+            // Toggle sidebar
+            $('.sidebar-toggle').on('click', function() {
+                $('.sidebar').toggleClass('collapsed');
+                $('.main-content').toggleClass('expanded');
+            });
+        });
+
         function editCar(car) {
             // Populate form with car data
+            document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit me-2"></i>Edit Featured Car';
             document.getElementById('formAction').value = 'edit';
             document.getElementById('editId').value = car.id;
             document.getElementById('title').value = car.title;
             document.getElementById('price').value = car.price;
-            
-            // Add hidden field for existing image
-            let existingImageField = document.getElementById('existing_image');
-            if (!existingImageField) {
-                existingImageField = document.createElement('input');
-                existingImageField.type = 'hidden';
-                existingImageField.id = 'existing_image';
-                existingImageField.name = 'existing_image';
-                document.getElementById('featuredCarForm').appendChild(existingImageField);
-            }
-            existingImageField.value = car.image_url;
-            
-            // Make image upload optional for editing
-            document.getElementById('car_image').required = false;
             document.getElementById('year').value = car.year;
             document.getElementById('mileage').value = car.mileage;
             document.getElementById('fuel_type').value = car.fuel_type;
@@ -469,24 +507,51 @@ $stats = $stmt->fetch(PDO::FETCH_ASSOC);
             document.getElementById('views').value = car.views;
             document.getElementById('time_posted').value = car.time_posted;
             document.getElementById('status').value = car.status;
-            document.getElementById('sort_order').value = car.sort_order;
+            document.getElementById('sort_order').value = car.sort_order || 0;
             
-            // Update form title and button
-            document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit me-2"></i>Edit Featured Car';
-            document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save me-1"></i> Update Featured Car';
+            // Update image preview
+            if (car.image_url) {
+                document.getElementById('imagePreview').innerHTML = 
+                    `<img src="../../${car.image_url}" class="img-thumbnail preview-image" style="max-width: 200px;">
+                     <input type="hidden" name="existing_image" value="${car.image_url}">`;
+            }
             
             // Scroll to form
-            document.querySelector('.card').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('featuredCarForm').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function confirmDelete(id) {
+            if (confirm('Are you sure you want to delete this featured car?')) {
+                window.location.href = `?delete=${id}`;
+            }
         }
 
         function resetForm() {
             document.getElementById('featuredCarForm').reset();
+            document.getElementById('formTitle').innerHTML = '<i class="fas fa-plus me-2"></i>Add New Featured Car';
             document.getElementById('formAction').value = 'add';
             document.getElementById('editId').value = '';
-            document.getElementById('formTitle').innerHTML = '<i class="fas fa-plus me-2"></i>Add New Featured Car';
-            document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save me-1"></i> Save Featured Car';
+            document.getElementById('imagePreview').innerHTML = '';
         }
 
+        // Preview image before upload
+        document.getElementById('car_image').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('imagePreview').innerHTML = 
+                        `<img src="${e.target.result}" class="img-thumbnail preview-image" style="max-width: 200px;">`;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Toggle sidebar
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('collapsed');
+            document.querySelector('.main-content').classList.toggle('expanded');
+        }
     </script>
 </body>
 </html>

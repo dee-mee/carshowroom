@@ -193,4 +193,55 @@ include 'includes/header.php';
     </div>
 </section>
 
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const contactForm = document.getElementById('contactForm');
+    const formResponse = document.createElement('div');
+    contactForm.parentNode.insertBefore(formResponse, contactForm.nextSibling);
+
+    contactForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const formData = {
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            subject: document.getElementById('subject').value,
+            phone: document.getElementById('phone').value,
+            message: document.getElementById('message').value
+        };
+
+        fetch('/carshowroom/api/handlers/contact.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Response data:', data); // Debug log
+            if (typeof data.message !== "undefined") {
+                const message = data.message;
+                const alertClass = data.success ? 'alert-success' : 'alert-danger';
+                formResponse.innerHTML = `<div class="alert ${alertClass} mt-3">${message}</div>`;
+                if (data.success) {
+                    contactForm.reset();
+                }
+            } else {
+                formResponse.innerHTML = `<div class="alert alert-warning mt-3">Unexpected response from server</div>`;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            formResponse.innerHTML = `
+                <div class="alert alert-danger mt-3">
+                    <strong>Error:</strong> ${error.message || 'An error occurred. Please try again later.'}
+                </div>`;
+        });
+    });
+});
+</script>
+
 <?php include 'includes/footer.php'; ?>
+
